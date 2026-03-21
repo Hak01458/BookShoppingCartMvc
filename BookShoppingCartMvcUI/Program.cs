@@ -26,6 +26,10 @@ builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
 
+// Template Method: register concrete report generator
+builder.Services.AddTransient<IReportGenerator, TopNSellingReportGenerator>();
+builder.Services.AddSingleton<IAppCache, AppCache>();
+
 var app = builder.Build();
 // Uncomment it when you run the project first time, It will registered an admin
 using (var scope = app.Services.CreateScope())
