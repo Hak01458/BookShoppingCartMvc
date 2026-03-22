@@ -2,6 +2,7 @@ using BookShoppingCartMvcUI;
 using BookShoppingCartMvcUI.Shared;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using BookShoppingCartMvcUI.Domain;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,9 +27,14 @@ builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
 
-// Template Method: register concrete report generator
-builder.Services.AddTransient<IReportGenerator, TopNSellingReportGenerator>();
+// keep previously added singleton cache if present
 builder.Services.AddSingleton<IAppCache, AppCache>();
+
+// Factory Method: register the concrete creator as the abstract creator type
+builder.Services.AddTransient<CartItemCreator, BookLeafCreator>();
+
+// Template method registration (if present earlier)
+builder.Services.AddTransient<IReportGenerator, TopNSellingReportGenerator>();
 
 var app = builder.Build();
 // Uncomment it when you run the project first time, It will registered an admin
