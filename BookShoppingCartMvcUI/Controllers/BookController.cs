@@ -53,12 +53,12 @@ public class BookController : Controller
         {
             if (bookToAdd.ImageFile != null)
             {
-                if(bookToAdd.ImageFile.Length> 1 * 1024 * 1024)
+                if (bookToAdd.ImageFile.Length > 1 * 1024 * 1024)
                 {
                     throw new InvalidOperationException("Image file can not exceed 1 MB");
                 }
-                string[] allowedExtensions = [".jpeg",".jpg",".png"];
-                string imageName=await _fileService.SaveFile(bookToAdd.ImageFile, allowedExtensions);
+                string[] allowedExtensions = new string[] { ".jpeg", ".jpg", ".png" };
+                string imageName = await _fileService.SaveFile(bookToAdd.ImageFile, allowedExtensions);
                 bookToAdd.Image = imageName;
             }
             // manual mapping of BookDTO -> Book
@@ -77,7 +77,7 @@ public class BookController : Controller
         }
         catch (InvalidOperationException ex)
         {
-            TempData["errorMessage"]= ex.Message;
+            TempData["errorMessage"] = ex.Message;
             return View(bookToAdd);
         }
         catch (FileNotFoundException ex)
@@ -95,25 +95,26 @@ public class BookController : Controller
     public async Task<IActionResult> UpdateBook(int id)
     {
         var book = await _bookRepo.GetBookById(id);
-        if(book==null)
+        if (book == null)
         {
             TempData["errorMessage"] = $"Book with the id: {id} does not found";
             return RedirectToAction(nameof(Index));
         }
+
         var genreSelectList = (await _genreRepo.GetGenres()).Select(genre => new SelectListItem
         {
             Text = genre.GenreName,
             Value = genre.Id.ToString(),
-            Selected=genre.Id==book.GenreId
+            Selected = genre.Id == book.GenreId
         });
-        BookDTO bookToUpdate = new() 
-        { 
+        BookDTO bookToUpdate = new()
+        {
             GenreList = genreSelectList,
-            BookName=book.BookName,
-            AuthorName=book.AuthorName,
-            GenreId=book.GenreId,
-            Price=book.Price,
-            Image=book.Image 
+            BookName = book.BookName,
+            AuthorName = book.AuthorName,
+            GenreId = book.GenreId,
+            Price = book.Price,
+            Image = book.Image
         };
         return View(bookToUpdate);
     }
@@ -125,7 +126,7 @@ public class BookController : Controller
         {
             Text = genre.GenreName,
             Value = genre.Id.ToString(),
-            Selected=genre.Id==bookToUpdate.GenreId
+            Selected = genre.Id == bookToUpdate.GenreId
         });
         bookToUpdate.GenreList = genreSelectList;
 
@@ -141,7 +142,7 @@ public class BookController : Controller
                 {
                     throw new InvalidOperationException("Image file can not exceed 1 MB");
                 }
-                string[] allowedExtensions = [".jpeg", ".jpg", ".png"];
+                string[] allowedExtensions = new string[] { ".jpeg", ".jpg", ".png" };
                 string imageName = await _fileService.SaveFile(bookToUpdate.ImageFile, allowedExtensions);
                 // hold the old image name. Because we will delete this image after updating the new
                 oldImage = bookToUpdate.Image;
@@ -150,7 +151,7 @@ public class BookController : Controller
             // manual mapping of BookDTO -> Book
             Book book = new()
             {
-                Id=bookToUpdate.Id,
+                Id = bookToUpdate.Id,
                 BookName = bookToUpdate.BookName,
                 AuthorName = bookToUpdate.AuthorName,
                 GenreId = bookToUpdate.GenreId,
@@ -159,7 +160,7 @@ public class BookController : Controller
             };
             await _bookRepo.UpdateBook(book);
             // if image is updated, then delete it from the folder too
-            if(!string.IsNullOrWhiteSpace(oldImage))
+            if (!string.IsNullOrWhiteSpace(oldImage))
             {
                 _fileService.DeleteFile(oldImage);
             }
@@ -180,6 +181,70 @@ public class BookController : Controller
         {
             TempData["errorMessage"] = "Error on saving data";
             return View(bookToUpdate);
+        }
+    }
+
+    public async Task<IActionResult> DuplicateBook(int id)
+    {
+        // show confirmation / edit form similar to UpdateBook
+        var book = await _bookRepo.GetBookById(id);
+        if (book == null)
+        {
+            TempData["errorMessage"] = $"Book with the id: {id} does not found";
+            return RedirectToAction(nameof(Index));
+        }
+        var genreSelectList = (await _genreRepo.GetGenres()).Select(genre => new SelectListItem
+        {
+            Text = genre.GenreName,
+            Value = genre.Id.ToString(),
+            Selected = genre.Id == book.GenreId
+        });
+        BookDTO bookToDuplicate = new()
+        {
+            Id = 0,
+            GenreList = genreSelectList,
+            BookName = book.BookName,
+            AuthorName = book.AuthorName,
+            GenreId = book.GenreId,
+            Price = book.Price,
+            Image = book.Image
+        };
+        return View("DuplicateBook", bookToDuplicate);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> DuplicateBookConfirm(BookDTO bookToDuplicate)
+    {
+        var genreSelectList = (await _genreRepo.GetGenres()).Select(genre => new SelectListItem
+        {
+            Text = genre.GenreName,
+            Value = genre.Id.ToString(),
+            Selected = genre.Id == bookToDuplicate.GenreId
+        });
+        bookToDuplicate.GenreList = genreSelectList;
+
+        if (!ModelState.IsValid)
+            return View("DuplicateBook", bookToDuplicate);
+
+        try
+        {
+            // create new book record; ensure Id is not copied
+            Book newBook = new()
+            {
+                BookName = bookToDuplicate.BookName,
+                AuthorName = bookToDuplicate.AuthorName,
+                Price = bookToDuplicate.Price,
+                Image = bookToDuplicate.Image,
+                GenreId = bookToDuplicate.GenreId
+            };
+            await _bookRepo.AddBook(newBook);
+            TempData["successMessage"] = "Book duplicated successfully";
+            return RedirectToAction(nameof(Index));
+        }
+        catch (Exception ex)
+        {
+            TempData["errorMessage"] = "Error on duplicating the book";
+            return View("DuplicateBook", bookToDuplicate);
         }
     }
 

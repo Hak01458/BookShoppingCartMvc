@@ -27,5 +27,16 @@ namespace BookShoppingCartMvcUI.Domain
             var sum = _children.Sum(c => c.GetTotalPrice());
             return sum * Quantity;
         }
+
+        public ICartItem Clone()
+        {
+            var copy = new BundleComposite(Name, Quantity);
+            // deep clone children
+            foreach (var child in _children)
+            {
+                copy.AddChild(child.Clone());
+            }
+            return copy;
+        }
     }
 }

@@ -39,6 +39,6 @@ namespace BookShoppingCartMvcUI.Repositories
 
         public async Task<Book?> GetBookById(int id) => await _context.Books.FindAsync(id);
 
-        public async Task<IEnumerable<Book>> GetBooks() => await _context.Books.Include(a=>a.Genre).ToListAsync();
+        public async Task<IEnumerable<Book>> GetBooks() => await _context.Books.Include(a => a.Genre).OrderByDescending(b => b.Id).ToListAsync();
     }
 }

@@ -68,6 +68,50 @@ namespace BookShoppingCartMvcUI.Repositories
             return cartItemCount;
         }
 
+        public async Task<int> DuplicateItem(int bookId)
+        {
+            string userId = GetUserId();
+            if (string.IsNullOrEmpty(userId))
+                throw new UnauthorizedAccessException("user is not logged-in");
+
+            var cart = await GetCart(userId);
+            if (cart is null)
+                throw new InvalidOperationException("Invalid cart");
+
+            // find existing cart detail
+            var cartItem = _db.CartDetails.FirstOrDefault(a => a.ShoppingCartId == cart.Id && a.BookId == bookId);
+            if (cartItem is null)
+                throw new InvalidOperationException("Item not in cart");
+
+            // Convert to domain BookLeaf and clone it
+            var leaf = ConvertDetailToLeaf(cartItem);
+            var cloned = leaf.Clone();
+
+            if (cloned is BookLeaf clonedLeaf)
+            {
+                // If same book already exists increase quantity, else add new cart detail
+                var existing = _db.CartDetails.FirstOrDefault(a => a.ShoppingCartId == cart.Id && a.BookId == clonedLeaf.BookId);
+                if (existing != null)
+                {
+                    existing.Quantity += clonedLeaf.Quantity;
+                }
+                else
+                {
+                    var newDetail = new CartDetail
+                    {
+                        BookId = clonedLeaf.BookId,
+                        ShoppingCartId = cart.Id,
+                        Quantity = clonedLeaf.Quantity,
+                        UnitPrice = Convert.ToDouble(clonedLeaf.Price)
+                    };
+                    _db.CartDetails.Add(newDetail);
+                }
+                _db.SaveChanges();
+            }
+
+            return await GetCartItemCount(userId);
+        }
+
         public async Task<int> RemoveItem(int bookId)
         {
             //using var transaction = _db.Database.BeginTransaction();

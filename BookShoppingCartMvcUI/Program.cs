@@ -13,7 +13,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services
-    .AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = true)
+    .AddIdentity<IdentityUser, IdentityRole>(options => options.SignIn.RequireConfirmedAccount = false)
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultUI()
     .AddDefaultTokenProviders();
@@ -26,6 +26,15 @@ builder.Services.AddTransient<IGenreRepository, GenreRepository>();
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
+
+// register profile service and proxy
+builder.Services.AddScoped<BookShoppingCartMvcUI.Services.ProfileService>();
+builder.Services.AddScoped<BookShoppingCartMvcUI.Services.IProfileService, BookShoppingCartMvcUI.Services.ProfileProxy>(sp =>
+{
+    var real = sp.GetRequiredService<BookShoppingCartMvcUI.Services.ProfileService>();
+    var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+    return new BookShoppingCartMvcUI.Services.ProfileProxy(real, cache);
+});
 
 // keep previously added singleton cache if present
 builder.Services.AddSingleton<IAppCache, AppCache>();

@@ -4,6 +4,8 @@
 
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity;
@@ -16,13 +18,16 @@ namespace BookShoppingCartMvcUI.Areas.Identity.Pages.Account.Manage
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
+        private readonly BookShoppingCartMvcUI.Services.IProfileService _profileService;
 
         public IndexModel(
             UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            SignInManager<IdentityUser> signInManager,
+            BookShoppingCartMvcUI.Services.IProfileService profileService)
         {
             _userManager = userManager;
             _signInManager = signInManager;
+            _profileService = profileService;
         }
 
         /// <summary>
@@ -58,6 +63,18 @@ namespace BookShoppingCartMvcUI.Areas.Identity.Pages.Account.Manage
             [Phone]
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
+
+            [Display(Name = "Họ tên đầy đủ")]
+            [MaxLength(100)]
+            public string FullName { get; set; }
+
+            [Display(Name = "Địa chỉ")]
+            [MaxLength(200)]
+            public string Address { get; set; }
+
+            [Display(Name = "Ngày sinh")]
+            [DataType(DataType.Date)]
+            public DateTime? DateOfBirth { get; set; }
         }
 
         private async Task LoadAsync(IdentityUser user)
@@ -67,9 +84,24 @@ namespace BookShoppingCartMvcUI.Areas.Identity.Pages.Account.Manage
 
             Username = userName;
 
+            // load claims for additional profile fields
+            var claims = await _userManager.GetClaimsAsync(user);
+            var fullNameClaim = claims.FirstOrDefault(c => c.Type == "FullName");
+            var addressClaim = claims.FirstOrDefault(c => c.Type == "Address");
+            var dobClaim = claims.FirstOrDefault(c => c.Type == "DateOfBirth");
+
+            DateTime? dob = null;
+            if (dobClaim != null && DateTime.TryParseExact(dobClaim.Value, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            {
+                dob = parsed;
+            }
+
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                FullName = fullNameClaim?.Value,
+                Address = addressClaim?.Value,
+                DateOfBirth = dob
             };
         }
 
@@ -81,7 +113,10 @@ namespace BookShoppingCartMvcUI.Areas.Identity.Pages.Account.Manage
                 return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            await LoadAsync(user);
+            // load using profile proxy/service
+            var input = await _profileService.GetProfileAsync(user);
+            Username = await _userManager.GetUserNameAsync(user);
+            Input = input;
             return Page();
         }
 
@@ -95,19 +130,18 @@ namespace BookShoppingCartMvcUI.Areas.Identity.Pages.Account.Manage
 
             if (!ModelState.IsValid)
             {
-                await LoadAsync(user);
+                // reload profile in case of validation error
+                var current = await _profileService.GetProfileAsync(user);
+                Username = await _userManager.GetUserNameAsync(user);
+                Input = current;
                 return Page();
             }
 
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-            if (Input.PhoneNumber != phoneNumber)
+            var ok = await _profileService.UpdateProfileAsync(user, Input);
+            if (!ok)
             {
-                var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-                if (!setPhoneResult.Succeeded)
-                {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
-                    return RedirectToPage();
-                }
+                StatusMessage = "Unexpected error when trying to update profile.";
+                return RedirectToPage();
             }
 
             await _signInManager.RefreshSignInAsync(user);

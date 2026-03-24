@@ -22,5 +22,11 @@ namespace BookShoppingCartMvcUI.Domain
         public void RemoveChild(ICartItem item) => throw new InvalidOperationException("Leaf has no children");
 
         public decimal GetTotalPrice() => Price * Quantity;
+
+        public ICartItem Clone()
+        {
+            // BookLeaf has only value types / immutable data, shallow copy is sufficient
+            return new BookLeaf(BookId, Name, Price, Quantity);
+        }
     }
 }

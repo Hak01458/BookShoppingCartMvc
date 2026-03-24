@@ -46,6 +46,8 @@
                         }
                         @* Decrement button *@
                         <a class="btn btn-info" href="/cart/removeitem?bookid=@item.BookId">-</a>
+                        @* Duplicate (Prototype) button *@
+                        <a class="btn btn-secondary" href="/Cart/Duplicate?bookId=@item.BookId">Duplicate</a>
                     </td>
                 </tr>
             }

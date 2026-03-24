@@ -39,6 +39,7 @@
                 <td>
                     <a asp-action="UpdateBook" asp-controller="Book" asp-route-id="@book.Id" class="btn btn-success">Edit</a>
                     <a asp-action="DeleteBook" asp-controller="Book" asp-route-id="@book.Id" class="btn btn-danger" onclick="return window.confirm('Are you sure?')">Delete</a>
+                    <a asp-action="DuplicateBook" asp-controller="Book" asp-route-id="@book.Id" class="btn btn-secondary">Nhân bản</a>
                 </td>
             </tr>
         }
