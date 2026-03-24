@@ -37,13 +37,6 @@ namespace BookShoppingCartMvcUI.Controllers
             return Ok(cartItem);
         }
 
-        // Duplicate a cart item using Prototype Clone
-        public async Task<IActionResult> Duplicate(int bookId)
-        {
-            var count = await _cartRepo.DuplicateItem(bookId);
-            return RedirectToAction("GetUserCart");
-        }
-
         public  IActionResult Checkout()
         {
             return View();
