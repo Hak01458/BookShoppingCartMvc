@@ -1,9 +1,18 @@
 ﻿@model BookDisplayModel
 @{
-
+    var currentStep = (int?)(ViewData["IteratorStep"]) ?? 2;
 }
 <div class="my-2">
     <form asp-action="Index" class="row row-cols-lg-auto g-3 align-items-center">
+        <div class="col-12">
+            <label class="visually-hidden" for="step">Step</label>
+            <select class="form-select" id="step" name="step">
+                <option value="1" selected="@(currentStep == 1)">1</option>
+                <option value="2" selected="@(currentStep == 2)">2</option>
+                <option value="3" selected="@(currentStep == 3)">3</option>
+                <option value="4" selected="@(currentStep == 4)">4</option>
+            </select>
+        </div>
         <div class="col-12">
             <label class="visually-hidden" for="genreId">Genres</label>
             <select class="form-select" id="genreId" name="genreId">
@@ -30,38 +39,66 @@
     </form>
 </div>
 
+@using BookShoppingCartMvcUI.Domain
+@using System.Linq
+@using BookShoppingCartMvcUI.Models
 <div class="w-100 mt-4 d-flex flex-wrap ">
-    @foreach (var book in Model.Books)
-    {
-        <div class="card mx-3 mb-4" style="width: 11rem;">
-            @if (string.IsNullOrEmpty(book.Image))
-            {
-                <img style="width:100%;height:180px" src="/images/NoImage.png" class="card-img-top" alt="...">
+    @{
+        // items prepared in controller
+        var items = Model.Items ?? new List<ICartItem>();
 
-            }
-            else
-            {
-                <img style="width:100%;height:180px" src="/images/@book.Image" class="card-img-top" alt="...">
-            }
-            <div class="card-body">
-                <h5 class="card-title">@book.BookName</h5>
-                <p class="card-text">
-                    <b>Genre: </b>@book.GenreName <br />
-                    <b>Author: </b>@book.AuthorName <br />
-                    <b>Price: </b>@book.Price
-                    @* <br/> <b>@book.Quantity</b> *@
-                </p>
-                @if (book.Quantity > 0)
+        var iterator = new CartIterator(items);
+        var step = (int?)(ViewData["IteratorStep"]) ?? 1;
+        iterator.Step = step;
+
+        // Lấy lần lượt các phần tử bằng Iterator
+        var iterated = new List<ICartItem>();
+        for (ICartItem it = iterator.First(); !iterator.IsDone; it = iterator.Next())
+        {
+            if (it != null) iterated.Add(it);
+        }
+    }
+
+    <div class="w-100 mt-4 d-flex flex-wrap ">
+        @foreach (var book in iterated)
+        {
+            <div class="card mx-3 mb-4" style="width: 11rem;">
+                @{
+                    // BookLeaf now contains Author/Genre/Image
+                    string imageName = null;
+                    BookLeaf src = book as BookLeaf;
+                    if (src != null)
+                    {
+                        imageName = src.Image;
+                    }
+                }
+                @if (string.IsNullOrEmpty(imageName))
                 {
-                    <button type="button" onclick="add(@book.Id)" class="btn btn-primary">Add to cart</button>
+                    <img style="width:100%;height:180px" src="/images/NoImage.png" class="card-img-top" alt="...">
                 }
                 else
                 {
-                    <span style="border: 1px solid;padding: 5px 8px;color: red;border-radius: 5px;">Out of stock</span>
+                    <img style="width:100%;height:180px" src="/images/@imageName" class="card-img-top" alt="...">
                 }
+                <div class="card-body">
+                    <h5 class="card-title">@book.Name</h5>
+                    <p class="card-text">
+                        <b>Genre: </b>@(src as BookLeaf != null ? (src as BookLeaf).GenreName ?? "Unknown" : "Unknown") <br />
+                        <b>Author: </b>@(src as BookLeaf != null ? (src as BookLeaf).AuthorName ?? "Unknown" : "Unknown") <br />
+                        <b>Price: </b>@(book.Price)
+                    </p>
+                    @if (book is BookLeaf leaf && leaf.Quantity > 0)
+                    {
+                        <button type="button" onclick="add(@leaf.BookId)" class="btn btn-primary">Add to cart</button>
+                    }
+                    else
+                    {
+                        <span style="border: 1px solid;padding: 5px 8px;color: red;border-radius: 5px;">Out of stock</span>
+                    }
+                </div>
             </div>
-        </div>
-    }
+        }
+    </div>
 </div>
 
 @section Scripts{

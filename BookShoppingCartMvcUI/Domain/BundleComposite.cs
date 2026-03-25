@@ -38,5 +38,11 @@ namespace BookShoppingCartMvcUI.Domain
             }
             return copy;
         }
+
+       
+        public ICartIterator CreateIterator()
+        {
+            return new CartIterator(_children);
+        }
     }
 }
