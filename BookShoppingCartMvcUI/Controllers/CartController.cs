@@ -6,15 +6,15 @@ namespace BookShoppingCartMvcUI.Controllers
     [Authorize]
     public class CartController : Controller
     {
-        private readonly ICartRepository _cartRepo;
+        private readonly BookShoppingCartMvcUI.Facades.ICartFacade _cartFacade;
 
-        public CartController(ICartRepository cartRepo)
+        public CartController(BookShoppingCartMvcUI.Facades.ICartFacade cartFacade)
         {
-            _cartRepo = cartRepo;
+            _cartFacade = cartFacade;
         }
         public async Task<IActionResult> AddItem(int bookId, int qty = 1, int redirect = 0)
         {
-            var cartCount = await _cartRepo.AddItem(bookId, qty);
+            var cartCount = await _cartFacade.AddItemAsync(bookId, qty);
             if (redirect == 0)
                 return Ok(cartCount);
             return RedirectToAction("GetUserCart");
@@ -22,18 +22,18 @@ namespace BookShoppingCartMvcUI.Controllers
 
         public async Task<IActionResult> RemoveItem(int bookId)
         {
-            var cartCount = await _cartRepo.RemoveItem(bookId);
+            var cartCount = await _cartFacade.RemoveItemAsync(bookId);
             return RedirectToAction("GetUserCart");
         }
         public async Task<IActionResult> GetUserCart()
         {
-            var cart = await _cartRepo.GetUserCart();
+            var cart = await _cartFacade.GetUserCartAsync();
             return View(cart);
         }
 
         public  async Task<IActionResult> GetTotalItemInCart()
         {
-            int cartItem = await _cartRepo.GetCartItemCount();
+            int cartItem = await _cartFacade.GetCartItemCountAsync();
             return Ok(cartItem);
         }
 
@@ -47,7 +47,7 @@ namespace BookShoppingCartMvcUI.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            bool isCheckedOut = await _cartRepo.DoCheckout(model);
+            bool isCheckedOut = await _cartFacade.CheckoutAsync(model);
             if (!isCheckedOut)
                 return RedirectToAction(nameof(OrderFailure));
             return RedirectToAction(nameof(OrderSuccess));

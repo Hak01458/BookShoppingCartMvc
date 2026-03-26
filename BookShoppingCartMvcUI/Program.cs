@@ -26,6 +26,8 @@ builder.Services.AddTransient<IGenreRepository, GenreRepository>();
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
+// register facade
+builder.Services.AddTransient<BookShoppingCartMvcUI.Facades.ICartFacade, BookShoppingCartMvcUI.Facades.CartFacade>();
 
 // register profile service and proxy
 builder.Services.AddScoped<BookShoppingCartMvcUI.Services.ProfileService>();
