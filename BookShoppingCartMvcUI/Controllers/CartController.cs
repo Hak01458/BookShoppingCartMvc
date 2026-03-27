@@ -25,6 +25,11 @@ namespace BookShoppingCartMvcUI.Controllers
             var cartCount = await _cartRepo.RemoveItem(bookId);
             return RedirectToAction("GetUserCart");
         }
+        public async Task<IActionResult> DeleteItem(int bookId)
+        {
+            var cartCount = await _cartRepo.DeleteItem(bookId);
+            return RedirectToAction("GetUserCart");
+        }
         public async Task<IActionResult> GetUserCart()
         {
             var cart = await _cartRepo.GetUserCart();

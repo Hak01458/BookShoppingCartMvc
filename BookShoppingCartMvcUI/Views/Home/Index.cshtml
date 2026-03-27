@@ -44,7 +44,9 @@
                 <img style="width:100%;height:180px" src="/images/@book.Image" class="card-img-top" alt="...">
             }
             <div class="card-body">
-                <h5 class="card-title">@book.BookName</h5>
+                <h5 class="card-title">
+                    <a asp-controller="Book" asp-action="Details" asp-route-id="@book.Id" class="text-decoration-none">@book.BookName</a>
+                </h5>
                 <p class="card-text">
                     <b>Genre: </b>@book.GenreName <br />
                     <b>Author: </b>@book.AuthorName <br />

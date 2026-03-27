@@ -38,5 +38,15 @@ namespace BookShoppingCartMvcUI.Domain
             }
             return copy;
         }
+
+        public void Accept(ICartVisitor visitor)
+        {
+            visitor.Visit(this);
+            // traverse children
+            foreach (var child in _children)
+            {
+                child.Accept(visitor);
+            }
+        }
     }
 }

@@ -12,6 +12,9 @@
         // Prototype: create a deep copy of this cart item
         ICartItem Clone();
 
+        // Visitor: accept a visitor
+        void Accept(ICartVisitor visitor);
+
         // Optional: children for composite nodes
         IReadOnlyCollection<ICartItem> Children { get; }
         void AddChild(ICartItem item);   // composite: add; leaf: may throw

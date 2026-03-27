@@ -21,6 +21,31 @@ namespace BookShoppingCartMvcUI.Repositories
             _itemCreator = itemCreator ?? throw new ArgumentNullException(nameof(itemCreator));
         }
 
+        public async Task<int> DeleteItem(int bookId)
+        {
+            string userId = GetUserId();
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                    throw new UnauthorizedAccessException("user is not logged-in");
+                var cart = await GetCart(userId);
+                if (cart is null)
+                    throw new InvalidOperationException("Invalid cart");
+                var cartItem = _db.CartDetails
+                                  .FirstOrDefault(a => a.ShoppingCartId == cart.Id && a.BookId == bookId);
+                if (cartItem is null)
+                    throw new InvalidOperationException("Not items in cart");
+                _db.CartDetails.Remove(cartItem);
+                _db.SaveChanges();
+            }
+            catch (Exception ex)
+            {
+
+            }
+            var cartItemCount = await GetCartItemCount(userId);
+            return cartItemCount;
+        }
+
         public async Task<int> AddItem(int bookId, int qty)
         {
             string userId = GetUserId();
@@ -153,6 +178,15 @@ namespace BookShoppingCartMvcUI.Repositories
                                     .Where(a => a.ShoppingCartId == cart.Id).ToList();
                 if (cartDetail.Count == 0)
                     throw new InvalidOperationException("Cart is empty");
+                // Visitor: build a bundle representing the cart and run stock check visitor
+                var bundleForCheck = await BuildBundleFromCart(userId, "__cart_check__");
+                var stockVisitor = new BookShoppingCartMvcUI.Domain.StockCheckVisitor(_db);
+                bundleForCheck.Accept(stockVisitor);
+                if (stockVisitor.Errors != null && stockVisitor.Errors.Count > 0)
+                {
+                    // return first error to caller
+                    throw new InvalidOperationException(stockVisitor.Errors.First());
+                }
                 var pendingRecord = _db.orderStatuses.FirstOrDefault(s => s.StatusName == "Pending");
                 if (pendingRecord is null)
                     throw new InvalidOperationException("Order status does not have Pending status");

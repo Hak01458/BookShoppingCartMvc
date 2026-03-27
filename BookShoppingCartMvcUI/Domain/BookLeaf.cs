@@ -28,5 +28,10 @@ namespace BookShoppingCartMvcUI.Domain
             // BookLeaf has only value types / immutable data, shallow copy is sufficient
             return new BookLeaf(BookId, Name, Price, Quantity);
         }
+
+        public void Accept(ICartVisitor visitor)
+        {
+            visitor.Visit(this);
+        }
     }
 }

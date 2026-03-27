@@ -46,6 +46,8 @@
                         }
                         @* Decrement button *@
                         <a class="btn btn-info" href="/cart/removeitem?bookid=@item.BookId">-</a>
+                        @* Delete button: remove the item from cart entirely *@
+                        <a class="btn btn-danger ms-2" href="/cart/deleteitem?bookid=@item.BookId" onclick="return confirm('Remove this item from cart?');">Delete</a>
                         @* Duplicate removed for user cart; admin uses book duplication in admin area *@
                     </td>
                 </tr>

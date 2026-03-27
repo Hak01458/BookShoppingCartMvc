@@ -25,6 +25,17 @@ public class BookController : Controller
         return View(books);
     }
 
+    [AllowAnonymous]
+    public async Task<IActionResult> Details(int id)
+    {
+        var book = await _bookRepo.GetBookById(id);
+        if (book == null)
+        {
+            return RedirectToAction(nameof(Index));
+        }
+        return View(book);
+    }
+
     public async Task<IActionResult> AddBook()
     {
         var genreSelectList = (await _genreRepo.GetGenres()).Select(genre => new SelectListItem
@@ -57,7 +68,7 @@ public class BookController : Controller
                 {
                     throw new InvalidOperationException("Image file can not exceed 1 MB");
                 }
-                string[] allowedExtensions = new string[] { ".jpeg", ".jpg", ".png" };
+                string[] allowedExtensions = new string[] { ".jpeg", ".jpg", ".png", ".jfif" };
                 string imageName = await _fileService.SaveFile(bookToAdd.ImageFile, allowedExtensions);
                 bookToAdd.Image = imageName;
             }
@@ -109,6 +120,7 @@ public class BookController : Controller
         });
         BookDTO bookToUpdate = new()
         {
+            Id = book.Id,
             GenreList = genreSelectList,
             BookName = book.BookName,
             AuthorName = book.AuthorName,
@@ -142,7 +154,7 @@ public class BookController : Controller
                 {
                     throw new InvalidOperationException("Image file can not exceed 1 MB");
                 }
-                string[] allowedExtensions = new string[] { ".jpeg", ".jpg", ".png" };
+                string[] allowedExtensions = new string[] { ".jpeg", ".jpg", ".png", ".jfif" };
                 string imageName = await _fileService.SaveFile(bookToUpdate.ImageFile, allowedExtensions);
                 // hold the old image name. Because we will delete this image after updating the new
                 oldImage = bookToUpdate.Image;

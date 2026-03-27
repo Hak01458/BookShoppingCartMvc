@@ -27,7 +27,18 @@ namespace BookShoppingCartMvcUI.Repositories
 
         public async Task UpdateBook(Book book)
         {
-            _context.Books.Update(book);
+            // Load existing entity and update specific fields to avoid inserting a new record
+            var existing = await _context.Books.FirstOrDefaultAsync(b => b.Id == book.Id);
+            if (existing == null)
+                throw new InvalidOperationException($"Book with id {book.Id} not found");
+
+            existing.BookName = book.BookName;
+            existing.AuthorName = book.AuthorName;
+            existing.Price = book.Price;
+            existing.Image = book.Image;
+            existing.GenreId = book.GenreId;
+
+            _context.Books.Update(existing);
             await _context.SaveChangesAsync();
         }
 
@@ -37,7 +48,7 @@ namespace BookShoppingCartMvcUI.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Book?> GetBookById(int id) => await _context.Books.FindAsync(id);
+        public async Task<Book?> GetBookById(int id) => await _context.Books.Include(b => b.Genre).FirstOrDefaultAsync(b => b.Id == id);
 
         public async Task<IEnumerable<Book>> GetBooks() => await _context.Books.Include(a => a.Genre).OrderByDescending(b => b.Id).ToListAsync();
     }

@@ -22,8 +22,9 @@ public class FileService : IFileService
         {
             Directory.CreateDirectory(path);
         }
-        var extension = Path.GetExtension(file.FileName);
-        if (!allowedExtensions.Contains(extension))
+        var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        var allowed = allowedExtensions.Select(e => e.ToLowerInvariant()).ToArray();
+        if (extension == null || !allowed.Contains(extension))
         {
             throw new InvalidOperationException($"Only {string.Join(",", allowedExtensions)} files allowed");
         }

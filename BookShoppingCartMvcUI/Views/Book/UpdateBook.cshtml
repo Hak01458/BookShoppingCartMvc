@@ -3,26 +3,31 @@
     Layout = "_AdminLayout";
 }
 <div style="width:50%">
-    <h2> Update Book </h2>
-    <a asp-action="Index" asp-controller="Book" class="btn btn-primary">Back</a>
+    <h2> Cập nhật sách </h2>
+    <a asp-action="Index" asp-controller="Book" class="btn btn-primary">Quay lại</a>
+    @if(TempData["errorMessage"] != null)
+    {
+        <div class="alert alert-danger mt-2">@TempData["errorMessage"]</div>
+    }
+    <div asp-validation-summary="All" class="text-danger"></div>
     <form asp-action="UpdateBook" enctype="multipart/form-data">
         <input type="hidden" asp-for="Id" />
         <input type="hidden" asp-for="Image" />
 
         <div class="my-2">
-            <label>Book*</label>
+            <label>Tên sách*</label>
             <input type="text" class="form-control" asp-for="BookName" />
             <span asp-validation-for="BookName" class="text-danger"></span>
         </div>
 
         <div class="my-2">
-            <label>Author*</label>
+            <label>Tác giả*</label>
             <input type="text" class="form-control" asp-for="AuthorName" />
             <span asp-validation-for="AuthorName" class="text-danger"></span>
         </div>
 
         <div class="my-2">
-            <label>Genre*</label>
+            <label>Thể loại*</label>
             <select class="form-control" asp-for="GenreId" asp-items="Model.GenreList">
                 <option value="">Select Genre</option>
             </select>
@@ -30,13 +35,13 @@
         </div>
 
         <div class="my-2">
-            <label>Price*</label>
+            <label>Giá*</label>
             <input type="number" class="form-control" asp-for="Price" />
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
 
         <div class="my-2">
-            <label>Image</label>
+            <label>Hình ảnh</label>
             @if(!string.IsNullOrEmpty(Model.Image))
             {
                 <img src="/images/@Model.Image" style="width:100px;height:80px"/>
@@ -45,7 +50,7 @@
         </div>
 
         <div class="my-2">
-            <button type="submit" class="btn btn-info">Update</button>
+            <button type="submit" class="btn btn-info">Cập nhật</button>
         </div>
     </form>
 </div>
