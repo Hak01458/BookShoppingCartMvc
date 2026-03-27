@@ -10,14 +10,18 @@ namespace BookShoppingCartMvcUI.Facades
     public class CartFacade : ICartFacade
     {
         private readonly ICartRepository _cartRepo;
-        private readonly IStockRepository _stockRepo;
+        private readonly IStockRepository _stock_repo;
         private readonly ILogger<CartFacade> _logger;
+        private readonly MediatR.IMediator _mediator;
+        private readonly Microsoft.Extensions.Caching.Memory.IMemoryCache _cache;
 
-        public CartFacade(ICartRepository cartRepo, IStockRepository stockRepo, ILogger<CartFacade> logger)
+        public CartFacade(ICartRepository cartRepo, IStockRepository stockRepo, ILogger<CartFacade> logger, MediatR.IMediator mediator, Microsoft.Extensions.Caching.Memory.IMemoryCache cache)
         {
             _cartRepo = cartRepo ?? throw new ArgumentNullException(nameof(cartRepo));
-            _stockRepo = stockRepo ?? throw new ArgumentNullException(nameof(stockRepo));
+            _stock_repo = stockRepo ?? throw new ArgumentNullException(nameof(stockRepo));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mediator = mediator;
+            _cache = cache;
         }
 
         public Task<int> AddItemAsync(int bookId, int qty = 1)
@@ -47,16 +51,20 @@ namespace BookShoppingCartMvcUI.Facades
         public async Task<bool> CheckoutAsync(CheckoutModel model)
         {
             _logger.LogInformation("Starting checkout for user");
-            var ok = await _cartRepo.DoCheckout(model);
-            if (ok)
+            var (orderId, userId) = await _cartRepo.DoCheckout(model);
+            if (orderId > 0)
             {
-                _logger.LogInformation("Checkout succeeded");
+                _logger.LogInformation("Checkout succeeded, order {OrderId}", orderId);
+                try
+                {
+                    // publish order placed notification with actual user id
+                    await _mediator.Publish(new BookShoppingCartMvcUI.Features.Notifications.OrderPlacedNotification(orderId, userId));
+                }
+                catch { }
+                return true;
             }
-            else
-            {
-                _logger.LogWarning("Checkout failed");
-            }
-            return ok;
+            _logger.LogWarning("Checkout failed");
+            return false;
         }
 
         public Task<BundleComposite> BuildBundleFromCartAsync(string? userId, string bundleName)
@@ -77,7 +85,7 @@ namespace BookShoppingCartMvcUI.Facades
             {
                 if (item is BookLeaf leaf)
                 {
-                    var stock = await _stockRepo.GetStockByBookId(leaf.BookId);
+                    var stock = await _stock_repo.GetStockByBookId(leaf.BookId);
                     if (stock == null)
                     {
                         _logger.LogWarning("Stock not found for BookId {BookId}", leaf.BookId);

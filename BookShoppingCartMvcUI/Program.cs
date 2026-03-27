@@ -1,6 +1,7 @@
 using BookShoppingCartMvcUI;
 using BookShoppingCartMvcUI.Shared;
 using Microsoft.AspNetCore.Identity;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using BookShoppingCartMvcUI.Domain;
 
@@ -18,6 +19,10 @@ builder.Services
     .AddDefaultUI()
     .AddDefaultTokenProviders();
 builder.Services.AddControllersWithViews();
+// MediatR
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddMemoryCache();
+builder.Services.AddMediatR(typeof(Program).Assembly);
 builder.Services.AddTransient<IHomeRepository, HomeRepository>();
 builder.Services.AddTransient<ICartRepository, CartRepository>();
 builder.Services.AddTransient<IUserOrderRepository, UserOrderRepository>();
@@ -26,8 +31,16 @@ builder.Services.AddTransient<IGenreRepository, GenreRepository>();
 builder.Services.AddTransient<IFileService, FileService>();
 builder.Services.AddTransient<IBookRepository, BookRepository>();
 builder.Services.AddTransient<IReportRepository, ReportRepository>();
-// register facade
-builder.Services.AddTransient<BookShoppingCartMvcUI.Facades.ICartFacade, BookShoppingCartMvcUI.Facades.CartFacade>();
+// register facade (resolve mediator and cache for CartFacade constructor)
+builder.Services.AddTransient<BookShoppingCartMvcUI.Facades.ICartFacade>(sp =>
+{
+    var cartRepo = sp.GetRequiredService<ICartRepository>();
+    var stockRepo = sp.GetRequiredService<IStockRepository>();
+    var logger = sp.GetRequiredService<Microsoft.Extensions.Logging.ILogger<BookShoppingCartMvcUI.Facades.CartFacade>>();
+    var mediator = sp.GetRequiredService<MediatR.IMediator>();
+    var cache = sp.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+    return new BookShoppingCartMvcUI.Facades.CartFacade(cartRepo, stockRepo, logger, mediator, cache);
+});
 
 // register profile service and proxy
 builder.Services.AddScoped<BookShoppingCartMvcUI.Services.ProfileService>();

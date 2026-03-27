@@ -7,14 +7,16 @@ namespace BookShoppingCartMvcUI.Controllers
     public class CartController : Controller
     {
         private readonly BookShoppingCartMvcUI.Facades.ICartFacade _cartFacade;
+        private readonly MediatR.IMediator _mediator;
 
-        public CartController(BookShoppingCartMvcUI.Facades.ICartFacade cartFacade)
+        public CartController(BookShoppingCartMvcUI.Facades.ICartFacade cartFacade, MediatR.IMediator mediator)
         {
             _cartFacade = cartFacade;
+            _mediator = mediator;
         }
         public async Task<IActionResult> AddItem(int bookId, int qty = 1, int redirect = 0)
         {
-            var cartCount = await _cartFacade.AddItemAsync(bookId, qty);
+            var cartCount = await _mediator.Send(new Features.Cart.AddItemCommand(bookId, qty));
             if (redirect == 0)
                 return Ok(cartCount);
             return RedirectToAction("GetUserCart");
@@ -27,13 +29,13 @@ namespace BookShoppingCartMvcUI.Controllers
         }
         public async Task<IActionResult> GetUserCart()
         {
-            var cart = await _cartFacade.GetUserCartAsync();
+            var cart = await _mediator.Send(new Features.Cart.GetUserCartQuery());
             return View(cart);
         }
 
         public  async Task<IActionResult> GetTotalItemInCart()
         {
-            int cartItem = await _cartFacade.GetCartItemCountAsync();
+            int cartItem = await _mediator.Send(new Features.Cart.GetCartItemCountQuery());
             return Ok(cartItem);
         }
 
@@ -47,7 +49,7 @@ namespace BookShoppingCartMvcUI.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            bool isCheckedOut = await _cartFacade.CheckoutAsync(model);
+            bool isCheckedOut = await _mediator.Send(new Features.Cart.CheckoutCommand(model));
             if (!isCheckedOut)
                 return RedirectToAction(nameof(OrderFailure));
             return RedirectToAction(nameof(OrderSuccess));

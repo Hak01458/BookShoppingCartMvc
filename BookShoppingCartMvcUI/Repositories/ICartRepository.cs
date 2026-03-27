@@ -10,7 +10,8 @@ namespace BookShoppingCartMvcUI.Repositories
         Task<ShoppingCart> GetUserCart();
         Task<ShoppingCart> GetCart(string userId);
         Task<int> GetCartItemCount(string userId = "");
-        Task<bool> DoCheckout(CheckoutModel model);
+        // returns (OrderId, UserId). OrderId > 0 means success.
+        Task<(int OrderId, string UserId)> DoCheckout(CheckoutModel model);
 
         // Composite helpers
         Task<BundleComposite> BuildBundleFromCart(string? userId, string bundleName);
