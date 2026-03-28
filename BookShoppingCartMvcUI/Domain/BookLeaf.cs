@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace BookShoppingCartMvcUI.Domain
 {
@@ -38,6 +39,11 @@ namespace BookShoppingCartMvcUI.Domain
         public void Accept(ICartVisitor visitor)
         {
             visitor.Visit(this);
+        }
+
+        public ICartIterator CreateIterator()
+        {
+            return new CartIterator(new List<ICartItem>());
         }
     }
 }

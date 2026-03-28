@@ -1,25 +1,40 @@
 ﻿@model BookDisplayModel
 @{
-    var currentStep = (int?)(ViewData["IteratorStep"]) ?? 2;
+    // ensure we default to step 1 when not provided
+    var currentStep = (int?)(ViewData["IteratorStep"]) ?? 1;
 }
 <div class="my-2">
     <form asp-action="Index" class="row row-cols-lg-auto g-3 align-items-center">
         <div class="col-12">
             <label class="visually-hidden" for="step">Step</label>
-            <select class="form-select" id="step" name="step">
-                <option value="1" selected="@(currentStep == 1)">1</option>
-                <option value="2" selected="@(currentStep == 2)">2</option>
-                <option value="3" selected="@(currentStep == 3)">3</option>
-                <option value="4" selected="@(currentStep == 4)">4</option>
+            <select class="form-select" id="step" name="step" onchange="this.form.submit()">
+                @for (int i = 1; i <= 4; i++)
+                {
+                    if (currentStep == i)
+                    {
+                        <option value="@i" selected>@i</option>
+                    }
+                    else
+                    {
+                        <option value="@i">@i</option>
+                    }
+                }
             </select>
         </div>
         <div class="col-12">
             <label class="visually-hidden" for="genreId">Genres</label>
-            <select class="form-select" id="genreId" name="genreId">
-                <option selected>Genre</option>
+            <select class="form-select" id="genreId" name="genreId" onchange="this.form.submit()">
+                <option value="0">Genre</option>
                 @foreach (var genre in Model.Genres)
                 {
-                    <option selected="@(genre.Id == Model.GenreId)" value="@genre.Id">@genre.GenreName</option>
+                    if (genre.Id == Model.GenreId)
+                    {
+                        <option value="@genre.Id" selected>@genre.GenreName</option>
+                    }
+                    else
+                    {
+                        <option value="@genre.Id">@genre.GenreName</option>
+                    }
                 }
             </select>
         </div>
@@ -28,7 +43,7 @@
             <label class="visually-hidden" for="sterm">Search by title</label>
             <div class="input-group">
                 <div class="input-group-text"></div>
-                <input type="text" class="form-control" value="@Model.STerm" id="sterm" name="sterm" placeholder="Sarch by title">
+                <input type="text" class="form-control" value="@Model.STerm" id="sterm" name="sterm" placeholder="Search by title">
             </div>
         </div>
 

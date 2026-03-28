@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace BookShoppingCartMvcUI.Domain
 {
@@ -37,6 +38,11 @@ namespace BookShoppingCartMvcUI.Domain
                 copy.AddChild(child.Clone());
             }
             return copy;
+        }
+
+        public ICartIterator CreateIterator()
+        {
+            return new CartIterator(_children);
         }
 
         public void Accept(ICartVisitor visitor)
