@@ -39,6 +39,12 @@ namespace BookShoppingCartMvcUI.Domain
             return copy;
         }
 
+        public ICartIterator CreateIterator()
+        {
+            
+            return new CartIterator(_children);
+        }
+
         public void Accept(ICartVisitor visitor)
         {
             visitor.Visit(this);
