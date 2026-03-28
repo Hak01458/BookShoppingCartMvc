@@ -16,7 +16,7 @@ namespace BookShoppingCartMvcUI.Controllers
             _logger = logger;
         }
 
-        public async Task<IActionResult> Index(string sterm="",int genreId=0)
+        public async Task<IActionResult> Index(string sterm = "", int genreId = 0, int step = 1)
         {
             IEnumerable<Book> books = await _homeRepository.GetBooks(sterm, genreId);
             IEnumerable<Genre> genres = await _homeRepository.Genres();
@@ -27,6 +27,18 @@ namespace BookShoppingCartMvcUI.Controllers
               STerm=sterm,
               GenreId=genreId
             };
+            // map Books -> domain cart items so view doesn't need to map
+            var items = books.Select(b => new BookShoppingCartMvcUI.Domain.BookLeaf(
+                b.Id,
+                b.BookName,
+                (decimal)b.Price,
+                b.Quantity,
+                b.AuthorName,
+                b.GenreName,
+                b.Image)).ToList<BookShoppingCartMvcUI.Domain.ICartItem>();
+            bookModel.Items = items;
+
+            ViewData["IteratorStep"] = step;
             return View(bookModel);
         }
 

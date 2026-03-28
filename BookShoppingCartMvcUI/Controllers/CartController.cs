@@ -6,15 +6,17 @@ namespace BookShoppingCartMvcUI.Controllers
     [Authorize]
     public class CartController : Controller
     {
-        private readonly ICartRepository _cartRepo;
+        private readonly BookShoppingCartMvcUI.Facades.ICartFacade _cartFacade;
+        private readonly MediatR.IMediator _mediator;
 
-        public CartController(ICartRepository cartRepo)
+        public CartController(BookShoppingCartMvcUI.Facades.ICartFacade cartFacade, MediatR.IMediator mediator)
         {
-            _cartRepo = cartRepo;
+            _cartFacade = cartFacade;
+            _mediator = mediator;
         }
         public async Task<IActionResult> AddItem(int bookId, int qty = 1, int redirect = 0)
         {
-            var cartCount = await _cartRepo.AddItem(bookId, qty);
+            var cartCount = await _mediator.Send(new Features.Cart.AddItemCommand(bookId, qty));
             if (redirect == 0)
                 return Ok(cartCount);
             return RedirectToAction("GetUserCart");
@@ -22,7 +24,7 @@ namespace BookShoppingCartMvcUI.Controllers
 
         public async Task<IActionResult> RemoveItem(int bookId)
         {
-            var cartCount = await _cartRepo.RemoveItem(bookId);
+            var cartCount = await _cartFacade.RemoveItemAsync(bookId);
             return RedirectToAction("GetUserCart");
         }
         public async Task<IActionResult> DeleteItem(int bookId)
@@ -32,13 +34,13 @@ namespace BookShoppingCartMvcUI.Controllers
         }
         public async Task<IActionResult> GetUserCart()
         {
-            var cart = await _cartRepo.GetUserCart();
+            var cart = await _mediator.Send(new Features.Cart.GetUserCartQuery());
             return View(cart);
         }
 
         public  async Task<IActionResult> GetTotalItemInCart()
         {
-            int cartItem = await _cartRepo.GetCartItemCount();
+            int cartItem = await _mediator.Send(new Features.Cart.GetCartItemCountQuery());
             return Ok(cartItem);
         }
 
@@ -52,7 +54,7 @@ namespace BookShoppingCartMvcUI.Controllers
         {
             if (!ModelState.IsValid)
                 return View(model);
-            bool isCheckedOut = await _cartRepo.DoCheckout(model);
+            bool isCheckedOut = await _mediator.Send(new Features.Cart.CheckoutCommand(model));
             if (!isCheckedOut)
                 return RedirectToAction(nameof(OrderFailure));
             return RedirectToAction(nameof(OrderSuccess));

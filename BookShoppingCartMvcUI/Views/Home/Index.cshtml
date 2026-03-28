@@ -1,9 +1,18 @@
 ﻿@model BookDisplayModel
 @{
-
+    var currentStep = (int?)(ViewData["IteratorStep"]) ?? 2;
 }
 <div class="my-2">
     <form asp-action="Index" class="row row-cols-lg-auto g-3 align-items-center">
+        <div class="col-12">
+            <label class="visually-hidden" for="step">Step</label>
+            <select class="form-select" id="step" name="step">
+                <option value="1" selected="@(currentStep == 1)">1</option>
+                <option value="2" selected="@(currentStep == 2)">2</option>
+                <option value="3" selected="@(currentStep == 3)">3</option>
+                <option value="4" selected="@(currentStep == 4)">4</option>
+            </select>
+        </div>
         <div class="col-12">
             <label class="visually-hidden" for="genreId">Genres</label>
             <select class="form-select" id="genreId" name="genreId">

@@ -11,14 +11,17 @@ namespace BookShoppingCartMvcUI.Repositories
         private readonly UserManager<IdentityUser> _userManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly CartItemCreator _itemCreator; // Factory Method creator
+        private readonly Microsoft.Extensions.Logging.ILogger<CartRepository> _logger;
 
         public CartRepository(ApplicationDbContext db, IHttpContextAccessor httpContextAccessor,
-            UserManager<IdentityUser> userManager, CartItemCreator itemCreator)
+            UserManager<IdentityUser> userManager, CartItemCreator itemCreator,
+            Microsoft.Extensions.Logging.ILogger<CartRepository> logger)
         {
             _db = db;
             _userManager = userManager;
             _httpContextAccessor = httpContextAccessor;
             _itemCreator = itemCreator ?? throw new ArgumentNullException(nameof(itemCreator));
+            _logger = logger;
         }
 
         public async Task<int> DeleteItem(int bookId)
@@ -49,7 +52,6 @@ namespace BookShoppingCartMvcUI.Repositories
         public async Task<int> AddItem(int bookId, int qty)
         {
             string userId = GetUserId();
-            using var transaction = _db.Database.BeginTransaction();
             try
             {
                 if (string.IsNullOrEmpty(userId))
@@ -84,10 +86,11 @@ namespace BookShoppingCartMvcUI.Repositories
                     _db.CartDetails.Add(cartItem);
                 }
                 _db.SaveChanges();
-                transaction.Commit();
             }
             catch (Exception ex)
             {
+                _logger?.LogError(ex, "AddItem failed for BookId {BookId} Qty {Qty} User {UserId}", bookId, qty, userId);
+                throw;
             }
             var cartItemCount = await GetCartItemCount(userId);
             return cartItemCount;
@@ -109,16 +112,28 @@ namespace BookShoppingCartMvcUI.Repositories
                 var cartItem = _db.CartDetails
                                   .FirstOrDefault(a => a.ShoppingCartId == cart.Id && a.BookId == bookId);
                 if (cartItem is null)
-                    throw new InvalidOperationException("Not items in cart");
+                {
+                    // no item to remove -> log and return current count instead of throwing
+                    _logger?.LogWarning("RemoveItem: no cart detail for BookId {BookId} and User {UserId}", bookId, userId);
+                    var currentCount = await GetCartItemCount(userId);
+                    return currentCount;
+                }
                 else if (cartItem.Quantity == 1)
+                {
                     _db.CartDetails.Remove(cartItem);
+                }
                 else
+                {
                     cartItem.Quantity = cartItem.Quantity - 1;
+                }
                 _db.SaveChanges();
             }
             catch (Exception ex)
             {
-
+                _logger?.LogError(ex, "RemoveItem failed for BookId {BookId} User {UserId}", bookId, userId);
+                // return current count to caller instead of throwing to UI
+                var currentCount = await GetCartItemCount(userId);
+                return currentCount;
             }
             var cartItemCount = await GetCartItemCount(userId);
             return cartItemCount;
@@ -161,14 +176,13 @@ namespace BookShoppingCartMvcUI.Repositories
             return data.Count;
         }
 
-        public async Task<bool> DoCheckout(CheckoutModel model)
+        public async Task<(int OrderId, string UserId)> DoCheckout(CheckoutModel model)
         {
-            using var transaction = _db.Database.BeginTransaction();
+            string userId = GetUserId();
             try
             {
                 // logic
                 // move data from cartDetail to order and order detail then we will remove cart detail
-                var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                     throw new UnauthorizedAccessException("User is not logged-in");
                 var cart = await GetCart(userId);
@@ -235,13 +249,12 @@ namespace BookShoppingCartMvcUI.Repositories
                 // removing the cartdetails
                 _db.CartDetails.RemoveRange(cartDetail);
                 _db.SaveChanges();
-                transaction.Commit();
-                return true;
+                return (order.Id, userId);
             }
             catch (Exception ex)
             {
-
-                return false;
+                _logger?.LogError(ex, "DoCheckout failed for User {UserId}", userId);
+                return (0, string.Empty);
             }
         }
 
@@ -295,10 +308,9 @@ namespace BookShoppingCartMvcUI.Repositories
         public async Task<bool> CheckoutBundle(BundleComposite bundle, CheckoutModel model)
         {
             if (bundle == null) throw new ArgumentNullException(nameof(bundle));
-            using var transaction = _db.Database.BeginTransaction();
+            string userId = GetUserId();
             try
             {
-                var userId = GetUserId();
                 if (string.IsNullOrEmpty(userId))
                     throw new UnauthorizedAccessException("User is not logged-in");
 
@@ -353,13 +365,12 @@ namespace BookShoppingCartMvcUI.Repositories
                 }
 
                 _db.SaveChanges();
-                transaction.Commit();
                 return true;
             }
             catch (Exception ex)
             {
-                // consider logging
-                return false;
+                _logger?.LogError(ex, "CheckoutBundle failed for user {UserId}", userId);
+                throw;
             }
         }
 

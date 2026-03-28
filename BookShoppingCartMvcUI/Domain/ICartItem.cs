@@ -19,5 +19,8 @@
         IReadOnlyCollection<ICartItem> Children { get; }
         void AddChild(ICartItem item);   // composite: add; leaf: may throw
         void RemoveChild(ICartItem item);
+
+        // Iterator factory: create an iterator for this cart item
+        ICartIterator CreateIterator();
     }
 }
