@@ -29,7 +29,7 @@ namespace BookShoppingCartMvcUI.Controllers
         }
         public async Task<IActionResult> DeleteItem(int bookId)
         {
-            var cartCount = await _cartRepo.DeleteItem(bookId);
+            var cartCount = await _cartFacade.DeleteItem(bookId);
             return RedirectToAction("GetUserCart");
         }
         public async Task<IActionResult> GetUserCart()
