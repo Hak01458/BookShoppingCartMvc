@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using BookShoppingCartMvcUI.Domain;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Build.Framework;
 using Microsoft.EntityFrameworkCore;
-using BookShoppingCartMvcUI.Domain;
 using System.Linq;
 
 namespace BookShoppingCartMvcUI.Repositories
@@ -179,46 +181,50 @@ namespace BookShoppingCartMvcUI.Repositories
         public async Task<(int OrderId, string UserId)> DoCheckout(CheckoutModel model)
         {
             string userId = GetUserId();
+            // ensure the entire checkout is atomic
+            using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
-                // logic
-                // move data from cartDetail to order and order detail then we will remove cart detail
                 if (string.IsNullOrEmpty(userId))
                     throw new UnauthorizedAccessException("User is not logged-in");
                 var cart = await GetCart(userId);
                 if (cart is null)
                     throw new InvalidOperationException("Invalid cart");
-                var cartDetail = _db.CartDetails
-                                    .Where(a => a.ShoppingCartId == cart.Id).ToList();
+
+                var cartDetail = await _db.CartDetails.Where(a => a.ShoppingCartId == cart.Id).ToListAsync();
                 if (cartDetail.Count == 0)
                     throw new InvalidOperationException("Cart is empty");
+
                 // Visitor: build a bundle representing the cart and run stock check visitor
                 var bundleForCheck = await BuildBundleFromCart(userId, "__cart_check__");
                 var stockVisitor = new BookShoppingCartMvcUI.Domain.StockCheckVisitor(_db);
                 bundleForCheck.Accept(stockVisitor);
                 if (stockVisitor.Errors != null && stockVisitor.Errors.Count > 0)
                 {
-                    // return first error to caller
                     throw new InvalidOperationException(stockVisitor.Errors.First());
                 }
-                var pendingRecord = _db.orderStatuses.FirstOrDefault(s => s.StatusName == "Pending");
+
+                var pendingRecord = await _db.orderStatuses.FirstOrDefaultAsync(s => s.StatusName == "Pending");
                 if (pendingRecord is null)
                     throw new InvalidOperationException("Order status does not have Pending status");
+
                 var order = new Order
                 {
                     UserId = userId,
                     CreateDate = DateTime.UtcNow,
-                    Name=model.Name,
-                    Email=model.Email,
-                    MobileNumber=model.MobileNumber,
-                    PaymentMethod=model.PaymentMethod,
-                    Address=model.Address,
-                    IsPaid=false,
+                    Name = model.Name,
+                    Email = model.Email,
+                    MobileNumber = model.MobileNumber,
+                    PaymentMethod = model.PaymentMethod,
+                    Address = model.Address,
+                    IsPaid = false,
                     OrderStatusId = pendingRecord.Id
                 };
+
                 _db.Orders.Add(order);
-                _db.SaveChanges();
-                foreach(var item in cartDetail)
+                await _db.SaveChangesAsync(); // obtain order.Id inside transaction
+
+                foreach (var item in cartDetail)
                 {
                     var orderDetail = new OrderDetail
                     {
@@ -229,30 +235,28 @@ namespace BookShoppingCartMvcUI.Repositories
                     };
                     _db.OrderDetails.Add(orderDetail);
 
-                    // update stock here
-
                     var stock = await _db.Stocks.FirstOrDefaultAsync(a => a.BookId == item.BookId);
                     if (stock == null)
                     {
                         throw new InvalidOperationException("Stock is null");
                     }
-
                     if (item.Quantity > stock.Quantity)
                     {
                         throw new InvalidOperationException($"Only {stock.Quantity} items(s) are available in the stock");
                     }
-                    // decrease the number of quantity from the stock table
                     stock.Quantity -= item.Quantity;
                 }
-                //_db.SaveChanges();
 
                 // removing the cartdetails
                 _db.CartDetails.RemoveRange(cartDetail);
-                _db.SaveChanges();
+
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return (order.Id, userId);
             }
             catch (Exception ex)
             {
+                try { await transaction.RollbackAsync(); } catch { }
                 _logger?.LogError(ex, "DoCheckout failed for User {UserId}", userId);
                 return (0, string.Empty);
             }
@@ -309,12 +313,13 @@ namespace BookShoppingCartMvcUI.Repositories
         {
             if (bundle == null) throw new ArgumentNullException(nameof(bundle));
             string userId = GetUserId();
+            using var transaction = await _db.Database.BeginTransactionAsync();
             try
             {
                 if (string.IsNullOrEmpty(userId))
                     throw new UnauthorizedAccessException("User is not logged-in");
 
-                var pendingRecord = _db.orderStatuses.FirstOrDefault(s => s.StatusName == "Pending");
+                var pendingRecord = await _db.orderStatuses.FirstOrDefaultAsync(s => s.StatusName == "Pending");
                 if (pendingRecord is null)
                     throw new InvalidOperationException("Order status does not have Pending status");
 
@@ -331,7 +336,7 @@ namespace BookShoppingCartMvcUI.Repositories
                     OrderStatusId = pendingRecord.Id
                 };
                 _db.Orders.Add(order);
-                _db.SaveChanges();
+                await _db.SaveChangesAsync();
 
                 // iterate children (expect BookLeaf)
                 var bookLeafs = bundle.Children.OfType<BookLeaf>().ToList();
@@ -364,11 +369,13 @@ namespace BookShoppingCartMvcUI.Repositories
                     _db.CartDetails.RemoveRange(detailsToRemove);
                 }
 
-                _db.SaveChanges();
+                await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
                 return true;
             }
             catch (Exception ex)
             {
+                try { await transaction.RollbackAsync(); } catch { }
                 _logger?.LogError(ex, "CheckoutBundle failed for user {UserId}", userId);
                 throw;
             }
@@ -376,9 +383,14 @@ namespace BookShoppingCartMvcUI.Repositories
 
         private string GetUserId()
         {
-            var principal = _httpContextAccessor.HttpContext.User;
+            var principal = _httpContextAccessor.HttpContext?.User;
             string userId = _userManager.GetUserId(principal);
-            return userId;
+            if (string.IsNullOrEmpty(userId) && principal != null)
+            {
+                // fallback: try claim directly
+                userId = principal.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            }
+            return userId ?? string.Empty;
         }
 
 
