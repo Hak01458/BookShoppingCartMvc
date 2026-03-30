@@ -12,7 +12,6 @@ namespace BookShoppingCartMvcUI.Facades
         Task<ShoppingCart> GetUserCartAsync();
         Task<int> GetCartItemCountAsync();
         Task<bool> CheckoutAsync(CheckoutModel model);
-        Task<int> DeleteItemAsync(int bookId);
 
         Task<BundleComposite> BuildBundleFromCartAsync(string? userId, string bundleName);
         Task<bool> CheckoutBundleAsync(BundleComposite bundle, CheckoutModel model);

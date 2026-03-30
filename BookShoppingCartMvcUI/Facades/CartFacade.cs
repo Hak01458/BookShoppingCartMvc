@@ -78,11 +78,7 @@ namespace BookShoppingCartMvcUI.Facades
             _logger.LogDebug("Building bundle {BundleName} for user {UserId}", bundleName, userId ?? "(current)");
             return _cartRepo.BuildBundleFromCart(userId, bundleName);
         }
-        public async Task<int> DeleteItemAsync(int bookId)
-        {
-            // delegate to repository implementation
-            return await _cartRepo.DeleteItem(bookId);
-        }
+      
 
         public async Task<bool> CheckoutBundleAsync(BundleComposite bundle, CheckoutModel model)
         {
