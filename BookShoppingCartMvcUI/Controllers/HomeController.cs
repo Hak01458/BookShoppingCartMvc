@@ -18,17 +18,27 @@ namespace BookShoppingCartMvcUI.Controllers
 
         public async Task<IActionResult> Index(string sterm = "", int genreId = 0, int step = 1)
         {
-            IEnumerable<Book> books = await _homeRepository.GetBooks(sterm, genreId);
-            IEnumerable<Genre> genres = await _homeRepository.Genres();
+            // get all books from repository
+            var books = (await _homeRepository.GetBooks(sterm, genreId)).ToList();
+            var genres = await _homeRepository.Genres();
+
+            // If a step > 1 is selected, show every Nth book (0-based index)
+            IEnumerable<Book> displayedBooks = books;
+            if (step > 1)
+            {
+                displayedBooks = books.Where((b, idx) => idx % step == 0).ToList();
+            }
+
             BookDisplayModel bookModel = new BookDisplayModel
             {
-              Books=books,
-              Genres=genres,
-              STerm=sterm,
-              GenreId=genreId
+                Books = displayedBooks,
+                Genres = genres,
+                STerm = sterm,
+                GenreId = genreId
             };
-            // map Books -> domain cart items so view doesn't need to map
-            var items = books.Select(b => new BookShoppingCartMvcUI.Domain.BookLeaf(
+
+            // map displayed Books -> domain cart items so view doesn't need to map
+            var items = displayedBooks.Select(b => new BookShoppingCartMvcUI.Domain.BookLeaf(
                 b.Id,
                 b.BookName,
                 (decimal)b.Price,
