@@ -8,7 +8,6 @@ namespace BookShoppingCartMvcUI.Facades
     {
         Task<int> AddItemAsync(int bookId, int qty = 1);
         Task<int> RemoveItemAsync(int bookId);
-        Task<int> DeleteItemAsync(int bookId);
         Task<ShoppingCart> GetUserCartAsync();
         Task<int> GetCartItemCountAsync();
         Task<bool> CheckoutAsync(CheckoutModel model);

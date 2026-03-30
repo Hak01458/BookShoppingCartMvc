@@ -16,7 +16,7 @@ namespace BookShoppingCartMvcUI.Services
     }
 
     // Real subject: performs actual profile operations using UserManager
-    public class ProfileService
+    public class ProfileService : IProfileService
     {
         private readonly UserManager<IdentityUser> _userManager;
 
