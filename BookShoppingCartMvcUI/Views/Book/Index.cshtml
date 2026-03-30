@@ -1,52 +1,115 @@
 ﻿@model IEnumerable<Book>
 @{
     Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý danh mục sách";
 }
 
-<h2>Danh mục sách</h2>
+<div class="container-fluid mt-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold text-uppercase"><i class="bi bi-journal-bookmark-fill me-2"></i>Danh mục sách</h2>
+        <a asp-action="AddBook" asp-controller="Book" class="btn btn-primary btn-lg shadow-sm fw-bold">
+            <i class="bi bi-plus-lg me-1"></i> THÊM SÁCH MỚI
+        </a>
+    </div>
 
-<a asp-action="AddBook" asp-controller="Book" class="btn btn-primary">Thêm sách</a>
+    @if(Model?.Count() > 0)
+    {
+        <div class="card shadow-sm border-0 rounded-3 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-primary text-white" style="font-size: 1.15rem;">
+                        <tr>
+                            <th class="ps-4 py-3 border-0">Hình ảnh</th>
+                            <th class="border-0">Tên sách</th>
+                            <th class="border-0">Tác giả</th>
+                            <th class="border-0">Thể loại</th>
+                            <th class="border-0">Giá bán</th>
+                            <th class="text-center border-0 pe-4">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 1.1rem;">
+                        @foreach (var book in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 py-2">
+                                    @if(string.IsNullOrWhiteSpace(book.Image))
+                                    {
+                                        <img src="/Images/NoImage.png" style="width:80px;height:110px;object-fit:cover" class="rounded shadow-sm" alt="no image" />
+                                    }
+                                    else
+                                    {
+                                        <img src="/images/@book.Image" style="width:80px;height:110px;object-fit:cover" class="rounded shadow-sm" alt="@book.BookName" />
+                                    }
+                                </td>
+                                <td class="fw-bold text-black" style="max-width: 250px;">@book.BookName</td>
+                                <td class="text-black">@book.AuthorName</td>
+                                <td>
+                                    <span class="badge rounded-pill bg-info text-white px-3 py-2">@book.Genre.GenreName</span>
+                                </td>
+                                <td class="fw-bold text-primary">@book.Price.ToString("N0") đ</td>
+                                <td class="text-center pe-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a asp-action="UpdateBook" asp-controller="Book" asp-route-id="@book.Id" 
+                                           class="btn btn-sm btn-success px-3 shadow-sm text-white fw-bold">
+                                            <i class="bi bi-pencil-square"></i> Sửa
+                                        </a>
+                                        <a asp-action="DuplicateBook" asp-controller="Book" asp-route-id="@book.Id" 
+                                           class="btn btn-sm btn-secondary px-2 shadow-sm text-white">
+                                            <i class="bi bi-copy"></i>
+                                        </a>
+                                        <a asp-action="DeleteBook" asp-controller="Book" asp-route-id="@book.Id" 
+                                           class="btn btn-sm btn-danger px-3 shadow-sm text-white fw-bold" 
+                                           onclick="return window.confirm('Bạn có chắc chắn muốn xóa cuốn sách này không?')">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="mt-3 text-muted small">
+            <i class="bi bi-info-circle me-1"></i> Hiển thị tổng cộng @Model.Count() đầu sách.
+        </div>
+    }
+    else
+    {
+        <div class="text-center py-5 bg-light rounded-3 border">
+            <i class="bi bi-journal-x text-secondary opacity-25" style="font-size: 5rem;"></i>
+            <h4 class="mt-3 text-secondary">Chưa có quyển sách nào trong danh mục.</h4>
+            <a asp-action="AddBook" asp-controller="Book" class="btn btn-primary mt-3">Thêm ngay</a>
+        </div>
+    }
+</div>
 
-@if(Model?.Count()>0)
-{
-    <table class="table table-striped my-2">
-        <tr>
-            <th>Hình ảnh</th>
-            <th>Tên sách</th>
-            <th>Tác giả</th>
-            <th>Thể loại</th>
-            <th>Giá</th>
-            <th>Action</th>
-        </tr>
+<style>
+    /* Ép màu đen cho văn bản nội dung */
+    .text-black { color: #000000 !important; }
 
-        @foreach (var book in Model)
-        {
-            <tr>
-                <td>
-                    @if(string.IsNullOrWhiteSpace(book.Image))
-                    {
-                        <img src="/Images/NoImage.png" style="width:80px;height:100px" alt="book image" />
-                    }
-                    else
-                    {
-                        <img src="/images/@book.Image" style="width:80px;height:100px" alt="book image" />
-                    }
-                </td>
-                <td>@book.BookName</td>
-                <td>@book.AuthorName</td>
-                <td>@book.Genre.GenreName</td>
-                <td>@book.Price</td>
-                <td>
-                    <a asp-action="UpdateBook" asp-controller="Book" asp-route-id="@book.Id" class="btn btn-success">Sửa</a>
-                    <a asp-action="DeleteBook" asp-controller="Book" asp-route-id="@book.Id" class="btn btn-danger" onclick="return window.confirm('Bạn có chắc muốn xóa không?')">Xóa</a>
-                    <a asp-action="DuplicateBook" asp-controller="Book" asp-route-id="@book.Id" class="btn btn-secondary">Nhân bản</a>
-                </td>
-            </tr>
-        }
-    </table>
-}
-else
-{
-    <h3>No records</h3>
-}
+    /* Cấu hình tiêu đề bảng chữ trắng cỡ lớn */
+    .table thead th {
+        color: #ffffff !important;
+        font-weight: 700;
+        vertical-align: middle;
+        letter-spacing: 0.5px;
+    }
 
+    .table tbody tr:hover {
+        background-color: #f8faff;
+        transition: 0.2s;
+    }
+
+    /* Tùy chỉnh màu các nút thao tác */
+    .btn-success { background-color: #198754; border: none; }
+    .btn-danger { background-color: #dc3545; border: none; }
+    .btn-secondary { background-color: #6c757d; border: none; }
+
+    .badge.bg-info {
+        background-color: #0dcaf0 !important;
+        color: white !important;
+        font-weight: 600;
+    }
+</style>
