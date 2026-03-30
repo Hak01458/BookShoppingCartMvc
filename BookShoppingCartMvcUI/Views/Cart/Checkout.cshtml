@@ -1,51 +1,73 @@
 ﻿@model CheckoutModel
 @{
-    ViewData["Title"] = "Checkout";
+    ViewData["Title"] = "Thanh toán";
 }
 
-<h2>Checkout</h2>
-<form asp-action="Checkout">
-    <div class="py-2">
-        <label asp-for="Name">Name*</label>
-        <input type="text" class="form-control" asp-for="Name" />
-        <span asp-validation-for="Name" class="text-danger"></span>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm border-0 border-top border-primary border-4">
+                <div class="card-body p-4 p-md-5">
+                    <h2 class="text-primary fw-bold mb-4 text-center">
+                        <i class="bi bi-credit-card-2-front me-2"></i>Thông tin thanh toán
+                    </h2>
+                    
+                    <form asp-action="Checkout">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label fw-bold text-dark">Họ và tên *</label>
+                            <input type="text" class="form-control border-primary border-opacity-25 py-2" asp-for="Name" placeholder="Nhập đầy đủ họ tên" />
+                            <span asp-validation-for="Name" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label fw-bold text-dark">Địa chỉ Email *</label>
+                            <input type="email" class="form-control border-primary border-opacity-25 py-2" asp-for="Email" placeholder="email@vi-du.com" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="MobileNumber" class="form-label fw-bold text-dark">Số điện thoại *</label>
+                            <input type="text" class="form-control border-primary border-opacity-25 py-2" asp-for="MobileNumber" placeholder="Ví dụ: 0912345xxx" />
+                            <span asp-validation-for="MobileNumber" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label fw-bold text-dark">Địa chỉ nhận hàng *</label>
+                            <textarea class="form-control border-primary border-opacity-25" asp-for="Address" rows="3" placeholder="Số nhà, tên đường, xã/phường, quận/huyện..."></textarea>
+                            <span asp-validation-for="Address" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-4">
+                            <label asp-for="PaymentMethod" class="form-label fw-bold text-dark">Phương thức thanh toán *</label>
+                            <select asp-for="PaymentMethod" class="form-select border-primary border-opacity-25 py-2 fw-semibold text-primary">
+                                <option value="">-- Chọn phương thức thanh toán --</option>
+                                @foreach (var method in Enum.GetValues(typeof(BookShoppingCartMvcUI.Constants.PaymentMethods)))
+                                {
+                                    var methodName = method.ToString() == "CashOnDelivery" ? "Thanh toán khi nhận hàng (COD)" : method.ToString();
+                                    <option value="@method.ToString()">@methodName</option>
+                                }
+                            </select>
+                            <span asp-validation-for="PaymentMethod" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow">
+                                Xác nhận đặt hàng <i class="bi bi-arrow-right-circle ms-2"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="text-center mt-3">
+                            <small class="text-muted italic">* Vui lòng kiểm tra kỹ thông tin trước khi nhấn Tiếp tục</small>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <div class="py-2">
-        <label asp-for="Email">Email*</label>
-        <input type="text" class="form-control" asp-for="Email" />
-        <span asp-validation-for="Email" class="text-danger"></span>
-
-    </div>
-
-    <div class="py-2">
-        <label asp-for="MobileNumber">MobileNumber*</label>
-        <input type="text" class="form-control" asp-for="MobileNumber" />
-        <span asp-validation-for="MobileNumber" class="text-danger"></span>
-    </div>
-
-
-    <div class="py-2">
-        <label asp-for="Address">Address*</label>
-        <textarea class="form-control" asp-for="Address" rows="5"> </textarea>
-        <span asp-validation-for="Address" class="text-danger"></span>
-    </div>
-
-    <div class="py-2">
-        <span class="mr-2">COD*</span>
-        <select asp-for="PaymentMethod" class="form-control">
-            <option value="">Select Payment Method</option>
-            @foreach (var method in Enum.GetValues(typeof(BookShoppingCartMvcUI.Constants.PaymentMethods)))
-            {
-                <option value="@method.ToString()">@method.ToString()</option>
-
-            }
-        </select>
-        <span asp-validation-for="PaymentMethod" class="text-danger"></span>
-    </div>
-
-    <div class="py-2">
-        <button type="submit" c class="btn btn-info">Next</button>
-
-    </div>
-</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,15 +1,57 @@
 ﻿@if (TempData["successMessage"] is not null)
 {
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <div id="toastSuccess" class="custom-toast success-toast">
         @TempData["successMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
 
 @if (TempData["errorMessage"] is not null)
 {
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <div id="toastError" class="custom-toast error-toast">
         @TempData["errorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 }
+
+<style>
+    .custom-toast {
+        position: fixed;
+        top: 80px;
+        right: 20px;
+        min-width: 250px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 500;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        opacity: 1;
+        z-index: 9999;
+        transition: all 0.3s ease;
+    }
+
+    .success-toast {
+        background-color: #28a745;
+    }
+
+    .error-toast {
+        background-color: #dc3545;
+    }
+</style>
+
+<script>
+    function autoHideToast(id) {
+        var el = document.getElementById(id);
+        if (el) {
+            setTimeout(function () {
+                el.style.opacity = '0';
+                el.style.transform = 'translateX(100%)';
+
+                setTimeout(function () {
+                    if (el && el.parentNode) el.parentNode.removeChild(el);
+                }, 300);
+            }, 1000); // 1 giây
+        }
+    }
+
+    autoHideToast('toastSuccess');
+    autoHideToast('toastError');
+</script>
