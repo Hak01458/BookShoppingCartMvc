@@ -36,6 +36,12 @@ namespace BookShoppingCartMvcUI.Facades
             return _cartRepo.RemoveItem(bookId);
         }
 
+        public Task<int> DeleteItemAsync(int bookId)
+        {
+            _logger.LogInformation("Deleting item {BookId}", bookId);
+            return _cartRepo.DeleteItem(bookId);
+        }
+
         public Task<ShoppingCart> GetUserCartAsync()
         {
             _logger.LogDebug("Getting user cart");
