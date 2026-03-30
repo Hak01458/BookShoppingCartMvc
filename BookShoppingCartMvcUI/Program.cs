@@ -84,6 +84,9 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// add authentication middleware so HttpContext.User is populated
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapControllerRoute(

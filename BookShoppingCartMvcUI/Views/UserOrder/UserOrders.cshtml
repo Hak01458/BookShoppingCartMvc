@@ -1,77 +1,115 @@
 ﻿@model IEnumerable<Order>
 @{
+    ViewData["Title"] = "Đơn hàng của tôi";
 }
-<div style="width:100%" class="mt-2">
-    <a href="/Identity/Account/Manage" class="btn btn-primary my-2">Back</a>
 
-    <h4>My Orders</h4>
-    @if (Model != null && Model.Count() > 0)
+<div style="width:100%" class="mt-3">
+    <a href="/Identity/Account/Manage" class="btn btn-sm btn-outline-primary mb-3 shadow-sm fw-bold">
+        <i class="bi bi-chevron-left"></i> Quay lại
+    </a>
+
+    <div class="d-flex align-items-center mb-4">
+        <h4 class="m-0 border-start border-primary border-4 ps-3 text-primary fw-bold">LỊCH SỬ ĐƠN HÀNG</h4>
+    </div>
+
+    @if (Model != null && Model.Any())
     {
-        <table class="table table-striped">
-            <tr>
-                <th>OrderDate</th>
-                <th>OrderStatus</th>
-            </tr>
-            @foreach (var order in Model)
-            {
-                <tr>
-                    <td>@order.CreateDate.ToString("dd-MM-yyyy")</td>
-                    <td>@order.OrderStatus.StatusName</td>
-                </tr>
-                @if (order.OrderDetail != null && order.OrderDetail.Count > 0)
-                {
+        <div class="table-responsive shadow rounded-3 border border-primary border-opacity-25">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background-color: #0d6efd; color: white;">
                     <tr>
-                        <td>
-                            <table class="table table-striped">
-                                <tr>
-                                    <td>
-                                        Total:
-                                    </td>
-                                    <td>
-                                        @(order.OrderDetail.Select(item => item.Book.Price * item.Quantity).Sum())
-
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Book</th>
-                                    <th>Image</th>
-                                    <th>Genre</th>
-                                    <th>Unit Price(INR)</th>
-                                    <th>Total Price</th>
-                                </tr>
-                                @foreach (var item in order.OrderDetail)
-                                {
-                                    <tr>
-                                        <td>@item.Book.BookName</td>
-                                        <td>
-                                            @if (string.IsNullOrEmpty(item.Book.Image))
-                                            {
-                                                <img src="/images/NoImage.png" style="width:80px;height:100px" />
-                                            }
-                                            else
-                                            {
-                                                <img src="/images/@item.Book.Image" style="width:80px;height:100px" />
-                                            }
-                                        </td>
-                                        <td>@item.Book.Genre.GenreName</td>
-                                        <td>@item.Book.Price X @item.Quantity</td>
-                                        <td> @(item.Book.Price * item.Quantity) </td>
-                                    </tr>
-                                }
-                            </table>
-                        </td>
+                        <th class="ps-4 py-3 border-0">Thông tin đơn</th>
+                        <th class="py-3 border-0 text-center">Trạng thái</th>
+                        <th class="text-end pe-4 py-3 border-0">Thao tác</th>
                     </tr>
-                }
-            }
-        </table>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model)
+                    {
+                        <tr style="background-color: #f0faff;">
+                            <td class="ps-4">
+                                <span class="text-primary small fw-bold">Mã đơn: #@order.Id</span><br />
+                                <span class="text-dark fw-bold">@order.CreateDate.ToString("dd/MM/yyyy")</span>
+                            </td>
+                            <td class="text-center">
+                                @{
+                                    // Tất cả trạng thái tích cực sẽ dùng xanh lá, các trạng thái khác dùng tông xanh dương/vàng
+                                    var statusStyle = order.OrderStatus.StatusName.ToLower() switch
+                                    {
+                                        "delivered" or "completed" or "thành công" => "background-color: #198754; color: white;", // Xanh lá đậm
+                                        "pending" => "background-color: #ffc107; color: #000;", // Vàng (đang chờ)
+                                        "cancelled" => "background-color: #dc3545; color: white;", // Đỏ (hủy)
+                                        _ => "background-color: #198754; color: white;" // Mặc định xanh lá cho tươi
+                                    };
+                                }
+                                <span class="badge shadow-sm px-3 py-2" style="@statusStyle font-size: 0.85rem;">
+                                    <i class="bi bi-check-circle-fill me-1"></i> @order.OrderStatus.StatusName
+                                </span>
+                            </td>
+                            <td class="text-end pe-4">
+                                <button class="btn btn-sm btn-primary px-3 fw-bold shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#details-@order.Id">
+                                    Chi tiết <i class="bi bi-chevron-down ms-1"></i>
+                                </button>
+                            </td>
+                        </tr>
 
+                        <tr class="collapse" id="details-@order.Id">
+                            <td colspan="3" class="p-0 border-0">
+                                <div class="bg-white p-4 border-top border-primary border-opacity-10">
+                                    <table class="table table-sm table-borderless">
+                                        <thead class="text-primary small text-uppercase fw-bold">
+                                            <tr class="border-bottom border-success border-opacity-25">
+                                                <th class="pb-3 text-success">Sản phẩm</th>
+                                                <th class="text-center pb-3 text-success">Số lượng</th>
+                                                <th class="text-end pb-3 text-success">Đơn giá</th>
+                                                <th class="text-end pb-3 text-success">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in order.OrderDetail)
+                                            {
+                                                <tr class="align-middle">
+                                                    <td class="py-3">
+                                                        <div class="d-flex align-items-center">
+                                                            <img src="@(string.IsNullOrEmpty(item.Book.Image) ? "/images/NoImage.png" : "/images/" + item.Book.Image)"
+                                                                 style="width:55px; height:75px; object-fit:cover" class="rounded border border-success border-opacity-25 me-3 shadow-sm" />
+                                                            <div>
+                                                                <div class="fw-bold text-dark">@item.Book.BookName</div>
+                                                                <div class="small text-success fw-semibold">@item.Book.Genre.GenreName</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-center fw-bold text-dark">@item.Quantity</td>
+                                                    <td class="text-end text-muted">@item.Book.Price.ToString("N0") đ</td>
+                                                    <td class="text-end fw-bold text-success">@((item.Book.Price * item.Quantity).ToString("N0")) đ</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                        <tfoot class="border-top border-success border-2">
+                                            <tr>
+                                                <td colspan="3" class="text-end py-3 px-4">
+                                                    <strong class="text-dark">Tổng thanh toán:</strong>
+                                                </td>
+                                                <td class="text-end py-3">
+                                                    <h4 class="m-0 fw-bold text-success">@((order.OrderDetail.Sum(i => i.Book.Price * i.Quantity)).ToString("N0")) đ</h4>
+                                                </td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
     else
     {
-        <h5>No orders</h5>
+        <div class="text-center py-5 rounded-3 border border-success border-opacity-25 shadow-sm" style="background-color: #f0fff4;">
+            <i class="bi bi-bag-x display-1 text-success text-opacity-50"></i>
+            <h5 class="mt-3 text-success fw-bold">Bạn chưa có đơn hàng nào</h5>
+            <a href="/" class="btn btn-success mt-2 px-4 shadow fw-bold">Mua sắm ngay thôi!</a>
+        </div>
     }
 </div>
-
-
-
-
