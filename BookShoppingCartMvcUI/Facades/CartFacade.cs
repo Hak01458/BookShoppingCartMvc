@@ -72,9 +72,9 @@ namespace BookShoppingCartMvcUI.Facades
             _logger.LogDebug("Building bundle {BundleName} for user {UserId}", bundleName, userId ?? "(current)");
             return _cartRepo.BuildBundleFromCart(userId, bundleName);
         }
-        public async Task<int> DeleteItem(int bookId)
+        public async Task<int> DeleteItemAsync(int bookId)
         {
-            // Ở trong CartFacade thì bạn được phép dùng _cartRepo
+            // delegate to repository implementation
             return await _cartRepo.DeleteItem(bookId);
         }
 
