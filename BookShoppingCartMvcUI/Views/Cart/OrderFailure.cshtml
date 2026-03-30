@@ -1,7 +1,53 @@
-﻿
-@{
-    ViewData["Title"] = "OrderFailure";
+﻿@{
+    ViewData["Title"] = "Thanh toán thất bại";
 }
 
-<h1>Order was failed.</h1>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6 text-center">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-5">
+                    <div class="mb-4">
+                        <i class="bi bi-x-circle-fill text-danger" style="font-size: 5rem;"></i>
+                    </div>
 
+                    <h1 class="display-6 fw-bold text-dark mb-3">Thanh toán thất bại!</h1>
+                    
+                    <p class="fs-5 text-secondary mb-4">
+                        Rất tiếc, đã có lỗi xảy ra trong quá trình xử lý đơn hàng của bạn. 
+                        Vui lòng không lo lắng, khoản thanh toán của bạn (nếu có) chưa bị trừ.
+                    </p>
+
+                    <div class="bg-light p-3 rounded-3 mb-4 border border-danger border-opacity-10 text-start">
+                        <h6 class="fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill me-2"></i>Lý do có thể xảy ra:</h6>
+                        <ul class="small text-muted mb-0">
+                            <li>Kết nối internet bị gián đoạn.</li>
+                            <li>Số dư tài khoản không đủ hoặc thẻ bị từ chối.</li>
+                            <li>Phiên làm việc đã hết hạn.</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="/Cart/GetUserCart" class="btn btn-primary btn-lg fw-bold shadow-sm">
+                            <i class="bi bi-cart-check me-2"></i>Quay lại giỏ hàng và thử lại
+                        </a>
+                        <a href="/Home/Contact" class="btn btn-outline-secondary btn-lg fw-bold">
+                            Liên hệ hỗ trợ kỹ thuật
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="bg-danger py-2"></div>
+            </div>
+            
+            <a href="/" class="d-block mt-4 text-decoration-none text-primary fw-bold">
+                <i class="bi bi-house-door me-1"></i> Quay về trang chủ
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Hiệu ứng rung nhẹ cho Icon lỗi */
+    .bi-x-circle-fill {
+        display: inline-block;

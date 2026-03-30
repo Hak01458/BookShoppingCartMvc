@@ -14,6 +14,66 @@
                         <img src="@(Url.Content(string.IsNullOrEmpty(Model?.Image) ? "/images/NoImage.png" : $"~/images/{Model.Image}"))"
                              class="img-fluid" style="max-height:300px" />
                     </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var btn = document.getElementById('btnAddToCart');
+        if (!btn) return;
+        // ensure it's clickable
+        btn.style.cursor = 'pointer';
+
+        btn.addEventListener('click', async function (e) {
+            console.log('Add to cart clicked');
+            btn.disabled = true;
+            try {
+                var bookId = '@(Model?.Id)';
+                var url = '/Cart/AddItem?bookId=' + encodeURIComponent(bookId) + '&qty=1&redirect=0';
+                var resp = await fetch(url, { method: 'GET', credentials: 'same-origin', headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } });
+
+                // if fetch followed a redirect (user not authenticated), perform full redirect to returned url
+                if (resp.redirected) {
+                    window.location = resp.url;
+                    return;
+                }
+
+                if (!resp.ok) {
+                    console.error('Add to cart failed status', resp.status);
+                    return;
+                }
+
+                var contentType = resp.headers.get('Content-Type') || '';
+                if (contentType.indexOf('application/json') !== -1) {
+                    var count = await resp.json();
+                    var cartCountEl = document.getElementById('cartCount');
+                    if (cartCountEl) cartCountEl.innerHTML = count;
+                } else {
+                    // not JSON -> probably HTML (login page) -> redirect
+                    var text = await resp.text();
+                    if (text && text.toLowerCase().indexOf('login') !== -1) {
+                        window.location = '/Identity/Account/Login';
+                        return;
+                    }
+                }
+
+                // show transient notification (no need to click OK)
+                var notice = document.createElement('div');
+                notice.className = 'alert alert-success';
+                notice.style.position = 'fixed';
+                notice.style.top = '1rem';
+                notice.style.right = '1rem';
+                notice.style.zIndex = 2000;
+                notice.style.transition = 'opacity 0.2s';
+                notice.innerText = 'Đã thêm sản phẩm vào giỏ hàng';
+                document.body.appendChild(notice);
+                setTimeout(function(){ notice.style.opacity = '0'; setTimeout(function(){ if (notice && notice.parentNode) notice.parentNode.removeChild(notice); }, 200); }, 500);
+
+            } catch (err) {
+                console.error(err);
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    });
+</script>
                 </div>
             </div>
 
@@ -47,7 +107,7 @@
 
                 <div class="d-flex gap-2">
                     <a class="btn btn-secondary" href="javascript:history.back()">Quay lại</a>
-                    <a class="btn btn-primary" href="/Cart/AddItem?bookId=@Model?.Id&redirect=1">Thêm vào giỏ hàng</a>
+                    <button id="btnAddToCart" type="button" class="btn btn-primary">Thêm vào giỏ hàng</button>
                 </div>
             </div>
         </div>
