@@ -43,7 +43,7 @@ namespace BookShoppingCartMvcUI.Domain
 
         public ICartIterator CreateIterator()
         {
-            return new CartIterator(new List<ICartItem>());
+            throw new NotImplementedException();
         }
     }
 }
