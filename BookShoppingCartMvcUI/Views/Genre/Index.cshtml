@@ -1,27 +1,85 @@
 ﻿@model IEnumerable<Genre>
 @{
     Layout = "_AdminLayout";
+    ViewData["Title"] = "Quản lý thể loại";
 }
 
-<h2>Genres</h2>
+<div class="container-fluid mt-4 px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-primary fw-bold text-uppercase">
+            <i class="bi bi-tags-fill me-2"></i>Danh mục thể loại
+        </h2>
+        <a asp-action="AddGenre" asp-for-controller="Genre" class="btn btn-primary btn-lg shadow-sm fw-bold">
+            <i class="bi bi-plus-lg me-1"></i> THÊM THỂ LOẠI
+        </a>
+    </div>
 
-<a asp-action="AddGenre" asp-controller="Genre" class="btn btn-primary">Add More</a>
-
-<table class="table table-striped my-2">
-    <tr>
-        <th>Genre</th>
-        <th>Action</th>
-    </tr>
-
-    @foreach(var genre in Model)
+    @if (Model != null && Model.Any())
     {
-        <tr>
-            <td>@genre.GenreName</td>
-            <td>
-                <a asp-action="UpdateGenre" asp-controller="Genre" asp-route-id="@genre.Id" class="btn btn-success">Edit</a>
-                <a asp-action="DeleteGenre" asp-controller="Genre" asp-route-id="@genre.Id" class="btn btn-danger" onclick="return window.confirm('Are you sure?')">Delete</a>
-            </td>
-        </tr>
+        <div class="card shadow-sm border-0 rounded-3 overflow-hidden" style="max-width: 800px;">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-primary text-white" style="font-size: 1.15rem;">
+                        <tr>
+                            <th class="ps-4 py-3 border-0">Tên thể loại</th>
+                            <th class="text-center border-0 pe-4" style="width: 250px;">Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody style="font-size: 1.1rem;">
+                        @foreach (var genre in Model)
+                        {
+                            <tr>
+                                <td class="ps-4 fw-bold text-black">@genre.GenreName</td>
+                                <td class="text-center pe-4">
+                                    <div class="d-flex justify-content-center gap-2">
+                                        <a asp-action="UpdateGenre" asp-controller="Genre" asp-route-id="@genre.Id" 
+                                           class="btn btn-sm btn-success px-3 shadow-sm fw-bold">
+                                            <i class="bi bi-pencil-square"></i> Sửa
+                                        </a>
+                                        <a asp-action="DeleteGenre" asp-controller="Genre" asp-route-id="@genre.Id" 
+                                           class="btn btn-sm btn-danger px-3 shadow-sm fw-bold" 
+                                           onclick="return window.confirm('Bạn có chắc chắn muốn xóa thể loại này không?')">
+                                            <i class="bi bi-trash"></i> Xóa
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="mt-3 text-muted small">
+            <i class="bi bi-info-circle me-1"></i> Tổng cộng có @Model.Count() thể loại sách.
+        </div>
     }
-</table>
+    else
+    {
+        <div class="text-center py-5 bg-light rounded-3 border" style="max-width: 800px;">
+            <i class="bi bi-tag text-secondary opacity-25" style="font-size: 4rem;"></i>
+            <h4 class="mt-3 text-secondary">Chưa có thể loại nào được tạo.</h4>
+            <a asp-action="AddGenre" asp-controller="Genre" class="btn btn-primary mt-2">Thêm ngay</a>
+        </div>
+    }
+</div>
 
+<style>
+    /* Ép màu đen cho nội dung */
+    .text-black { color: #000000 !important; }
+
+    /* Tiêu đề bảng chữ trắng cỡ lớn */
+    .table thead th {
+        color: #ffffff !important;
+        font-weight: 700;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f8faff;
+        transition: 0.2s;
+    }
+
+    /* Định dạng nút bấm */
+    .btn-success { background-color: #198754; border: none; }
+    .btn-danger { background-color: #dc3545; border: none; }
+</style>

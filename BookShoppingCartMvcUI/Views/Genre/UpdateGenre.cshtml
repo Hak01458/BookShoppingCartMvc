@@ -1,22 +1,62 @@
 ﻿@model GenreDTO
 @{
     Layout = "_AdminLayout";
+    ViewData["Title"] = "Cập nhật thể loại";
 }
-@* @Html.ValidationSummary() *@
-<div style="width:50%">
-<h2> Update Genre </h2>
-<a asp-action="Index" asp-controller="Genre" class="btn btn-primary">Back</a>
-<form asp-action="UpdateGenre">
-   <input type="hidden" asp-for="Id" />
 
-   <div class="my-2">
-      <label>Genre</label>
-      <input type="text" class="form-control" asp-for="GenreName" />
-            <span asp-validation-for="GenreName" class="text-danger"></span>
-   </div>
+<div class="container-fluid mt-4 px-4">
+    <div class="d-flex align-items-center mb-4">
+        <a asp-action="Index" asp-controller="Genre" class="btn btn-outline-secondary me-3 shadow-sm">
+            <i class="bi bi-arrow-left"></i> Quay lại
+        </a>
+        <h2 class="text-primary fw-bold mb-0 text-uppercase">Chỉnh sửa thể loại sách</h2>
+    </div>
 
-   <div class="my-2">
-      <button type="submit" class="btn btn-info">Update</button>
-   </div>
-</form>
+    <div class="row">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-sm border-0 border-top border-primary border-4">
+                <div class="card-body p-4 p-md-5">
+                    <form asp-action="UpdateGenre" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-black fs-5">Tên thể loại *</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-primary text-white border-primary">
+                                    <i class="bi bi-pencil-square"></i>
+                                </span>
+                                <input type="text" class="form-control border-primary border-opacity-25 py-2 fw-semibold text-dark"
+                                       asp-for="GenreName" placeholder="Nhập tên thể loại mới..." />
+                            </div>
+                            <span asp-validation-for="GenreName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg fw-bold shadow">
+                                <i class="bi bi-save me-2"></i> LƯU THAY ĐỔI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-light rounded-3 border border-info border-opacity-25">
+                <p class="small text-muted mb-0">
+                    <i class="bi bi-exclamation-circle-fill text-primary me-1"></i>
+                    <strong>Lưu ý:</strong> Khi bạn đổi tên thể loại, tất cả các cuốn sách thuộc thể loại này cũng sẽ được cập nhật tên thể loại mới ngay lập tức.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
+
+<style>
+    .text-black {
+        color: #000000 !important;
+    }
+    
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+    }
+</style>
