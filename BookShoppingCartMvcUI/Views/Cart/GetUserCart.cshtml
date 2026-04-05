@@ -57,10 +57,13 @@
                                             <span class="badge bg-danger text-white py-2 px-3 small">HẾT HÀNG</span>
                                         }
 
-                                        <a class="btn btn-danger ms-3 px-3 shadow-sm" href="/cart/deleteitem?bookid=@item.BookId" 
-                                           onclick="return confirm('Xóa sách này khỏi giỏ hàng?');">
-                                            <i class="bi bi-trash"></i>
-                                        </a>
+                                        <form method="get" action="/Cart/Duplicate" style="display:inline-block;margin:0;">
+                                            <input type="hidden" name="bookId" value="@item.BookId" />
+                                            <input type="hidden" name="qty" value="@item.Quantity" />
+                                            <button type="submit" class="btn btn-secondary ms-3 px-3 shadow-sm" title="Nhân đôi số lượng">
+                                                <i class="bi bi-files"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

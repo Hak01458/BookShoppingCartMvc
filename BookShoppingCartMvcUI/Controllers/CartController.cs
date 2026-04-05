@@ -27,6 +27,13 @@ namespace BookShoppingCartMvcUI.Controllers
             var cartCount = await _cartFacade.RemoveItemAsync(bookId);
             return RedirectToAction("GetUserCart");
         }
+        public async Task<IActionResult> Duplicate(int bookId, int qty = 1)
+        {
+            // duplicate means add the same quantity again
+            if (qty <= 0) qty = 1;
+            var cartCount = await _cartFacade.AddItemAsync(bookId, qty);
+            return RedirectToAction("GetUserCart");
+        }
         public async Task<IActionResult> GetUserCart()
         {
             var cart = await _mediator.Send(new Features.Cart.GetUserCartQuery());

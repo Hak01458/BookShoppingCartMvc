@@ -4,17 +4,17 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">Order Detail</h5>
+                <h5 class="modal-title" id="exampleModalLabel">Chi tiết đơn hàng</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <table class="table table-striped">
                     <tr>
-                        <th>Book</th>
-                        <th>Genre</th>
-                        <th>Price</th>
-                        <th>Quantiy</th>
-                        <th>TotalPrice</th>
+                        <th>Tên sách</th>
+                        <th>Thể loại</th>
+                        <th>Giá</th>
+                        <th>Số lượng</th>
+                        <th>Tổng cộng</th>
                     </tr>
                     @foreach (var item in Model.OrderDetail)
                     {
@@ -29,7 +29,7 @@
                 </table>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
             </div>
         </div>
     </div>
